@@ -11,8 +11,23 @@ const port = process.env.PORT || 4000;
 // on -> escutando - receptor
 // emit -> enviando algum dado
 
+const users = [];
+
 io.on('connection', (socket) => {
-    console.log(`Usuário ${socket.id} se conectou`)
+    socket.on('disconnect', () => {
+
+    })
+    
+    socket.on("join", (name) => {
+        const user = {id: socket.id, name};
+        users.push(user);
+        io.emit("message", {name: null, message: `${name} entrou no chat`, id: null})
+        io.emit("users", users)
+    })
+
+    socket.on("message", (message) => {
+        io.emit("message", message)
+    })
 })
 
 
