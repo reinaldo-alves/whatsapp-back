@@ -24,14 +24,19 @@ interface IRoom {
     roomname: string
 }
 
+interface IAllMessages {
+    [roomName: string]: Array<IMessage>
+}
+
 interface ServerToClientEvents {
     noArg: () => void;
     basicEmit: (a: number, b: string, c: Buffer) => void;
     withAck: (d: string, callback: (e: number) => void) => void;
     users: (f: Array<IUser>) => void;
-    message: (g: IMessage) => void;
+    message: (g: IMessage, h: string) => void;
     groupdata: (h: IRoom) => void;
     rooms: (h: Array<IRoom>) => void;
+    roomMessages: (i: Array<IMessage>) => void
 }
 
 interface ClientToServerEvents {
@@ -41,7 +46,8 @@ interface ClientToServerEvents {
     newgroup: (n: string, o: string, p: string) => void;
     newchat: (q: IUser, r: IUser) => void;
     adduser: (s: IUser, t: IRoom) => void;
-    joinroom: (u: string) => void
+    joinroom: (u: string) => void;
+    getRoomMessages: (v: IRoom) => void
 }
 
 interface SocketData {
@@ -67,36 +73,50 @@ const noUser = {id:'', name:'', avatar: '', color:''};
 
 let rooms = [] as Array<IRoom>
 
-let messages = [] as Array<any>
+function isInArray (array: Array<IUser>, id: string) {
+    for (let i = 0; i < array.length; i++) {
+        if (array[i].id === id) {
+        return true;
+        }
+    }
+    return false;
+}
 
 io.on('connection', (socket) => {
     socket.on('logout', (user) => {
         users = users.filter((item) => item.id !== user.id);
-        io.emit("message", {user: noUser, message: `${user.name} saiu do chat`, hour: ''})
+        const userRooms = rooms.filter((item) => isInArray(item.users, user.id) === true)
+        userRooms.map((item) => {
+            io.in(item.roomname).emit("message", {user: noUser, message: `${user.name} saiu do chat`, hour: ''}, item.roomname)
+        })
         io.emit("users", users)
     })
     
     socket.on("join", (name, avatar, color) => {
         const user = {id: socket.id, name: name, avatar: avatar, color: color};
         users.push(user);
-        io.emit("message", {user: noUser, message: `${name} entrou no chat`, hour: ''})
+        // io.emit("message", {user: noUser, message: `${name} entrou no chat`, hour: ''})
         io.emit("users", users)
         io.emit("rooms", rooms)
     })
 
     socket.on("message", (message, room) => {
-        socket.in(room.roomname).emit("message", message)
+        socket.in(room.roomname).emit("message", message, room.roomname)
     })
+
+    // socket.on("getRoomMessages", (room) => {
+    //     socket.emit("roomMessages", messages[room.roomname] || [])
+    // })
 
     socket.on("newgroup", (roomname, avatar, name) => {
         const user = users.filter((item) => item.name === name);
         const room = {name: roomname, avatar: avatar, users: user, messages: [], group: true, roomname: roomname}
         rooms.push(room);
         socket.join(roomname)
-        io.in(roomname).emit("message", {user: noUser, message: `${name} entrou no grupo`, hour: ''})
+        io.in(roomname).emit("message", {user: noUser, message: `Grupo ${roomname} criado`, hour: ''}, roomname)
         io.emit("groupdata", room)
         io.emit("rooms", rooms)
-        console.log('Novo grupo criado', room)
+        //io.in(roomname).emit("message", {user: noUser, message: `${name} entrou no grupo`, hour: ''})
     })
 
     socket.on("newchat", (otherUser, user) => {
@@ -105,17 +125,17 @@ io.on('connection', (socket) => {
         const room = {name: user.name.concat(otherUser.name), avatar: user.avatar.concat(otherUser.avatar), users: userschat, messages: [], group: false, roomname: roomName}
         rooms.push(room);
         socket.join(roomName)
+        io.in(roomName).emit("message", {user: noUser, message: 'Conversa iniciada', hour: ''}, roomName)
         io.emit("groupdata", room)
         io.emit("rooms", rooms)
-        console.log('Novo grupo criado', room)
-        console.log('Todos os grupos', rooms)
     })
 
     socket.on("adduser", (user, room) => {
-        const index = rooms.findIndex((item) => item.name === room.name);
+        const index = rooms.findIndex((item) => item.roomname === room.roomname);
         const selectedRoom = rooms[index];
         selectedRoom.users.push(user)
         rooms[index] = selectedRoom
+        io.in(selectedRoom.roomname).emit("message", {user: noUser, message: `${user.name} entrou no grupo`, hour: ''}, selectedRoom.roomname)
         io.emit("groupdata", selectedRoom)
         io.emit("rooms", rooms)
     })
