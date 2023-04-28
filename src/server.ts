@@ -88,8 +88,13 @@ io.on('connection', (socket) => {
         const userRooms = rooms.filter((item) => isInArray(item.users, user.id) === true)
         userRooms.map((item) => {
             io.in(item.roomname).emit("message", {user: noUser, message: `${user.name} saiu do chat`, hour: ''}, item.roomname)
+            socket.leave(item.roomname)
+        })
+        rooms.map((item) => {
+            item.users = item.users.filter((el) => el.id !== user.id);
         })
         io.emit("users", users)
+        io.emit("rooms", rooms)
     })
     
     socket.on("join", (name, avatar, color) => {
@@ -108,8 +113,8 @@ io.on('connection', (socket) => {
     //     socket.emit("roomMessages", messages[room.roomname] || [])
     // })
 
-    socket.on("newgroup", (roomname, avatar, name) => {
-        const user = users.filter((item) => item.name === name);
+    socket.on("newgroup", (roomname, avatar, id) => {
+        const user = users.filter((item) => item.id === id);
         const room = {name: roomname, avatar: avatar, users: user, messages: [], group: true, roomname: roomname}
         rooms.push(room);
         socket.join(roomname)
