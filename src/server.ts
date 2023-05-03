@@ -19,7 +19,6 @@ interface IRoom {
     name: string;
     avatar: string | null;
     users: Array<IUser>;
-    messages: Array<IMessage>;
     group: boolean;
     roomname: string
 }
@@ -100,7 +99,6 @@ io.on('connection', (socket) => {
     socket.on("join", (name, avatar, color) => {
         const user = {id: socket.id, name: name, avatar: avatar, color: color};
         users.push(user);
-        // io.emit("message", {user: noUser, message: `${name} entrou no chat`, hour: ''})
         io.emit("users", users)
         io.emit("rooms", rooms)
     })
@@ -108,10 +106,6 @@ io.on('connection', (socket) => {
     socket.on("message", (message, room) => {
         socket.in(room.roomname).emit("message", message, room.roomname)
     })
-
-    // socket.on("getRoomMessages", (room) => {
-    //     socket.emit("roomMessages", messages[room.roomname] || [])
-    // })
 
     socket.on("newgroup", (roomname, avatar, id) => {
         const user = users.filter((item) => item.id === id);
@@ -121,7 +115,6 @@ io.on('connection', (socket) => {
         io.in(roomname).emit("message", {user: noUser, message: `Grupo ${roomname} criado`, hour: ''}, roomname)
         io.emit("groupdata", room)
         io.emit("rooms", rooms)
-        //io.in(roomname).emit("message", {user: noUser, message: `${name} entrou no grupo`, hour: ''})
     })
 
     socket.on("newchat", (otherUser, user) => {
