@@ -4,8 +4,10 @@ import { Server } from "socket.io"
 
 interface IUser {
     id: string;
+    email: string;
     name: string;
     avatar: string;
+    password: string;
     color: string
 }
 
@@ -28,25 +30,24 @@ interface IAllMessages {
 }
 
 interface ServerToClientEvents {
-    noArg: () => void;
-    basicEmit: (a: number, b: string, c: Buffer) => void;
-    withAck: (d: string, callback: (e: number) => void) => void;
-    users: (f: Array<IUser>) => void;
-    message: (g: IMessage, h: string) => void;
-    groupdata: (h: IRoom) => void;
-    rooms: (h: Array<IRoom>) => void;
-    roomMessages: (i: Array<IMessage>) => void
+    users: (a: Array<IUser>) => void;
+    message: (b: IMessage, c: string) => void;
+    groupdata: (d: IRoom) => void;
+    rooms: (e: Array<IRoom>) => void;
+    roomMessages: (f: Array<IMessage>) => void
+    messagelogin: (g: string) => void
 }
 
 interface ClientToServerEvents {
-    join: (i: string, j: string, k: string) => void;
-    message: (l: IMessage, m: IRoom) => void;
-    logout: (m: IUser) => void;
-    newgroup: (n: string, o: string, p: string) => void;
-    newchat: (q: IUser, r: IUser) => void;
-    adduser: (s: IUser, t: IRoom) => void;
-    joinroom: (u: string) => void;
-    getRoomMessages: (v: IRoom) => void
+    join: (g: string, h: string, i: string, j: string, k: string) => void;
+    login: (l: string, m: string) => void;
+    message: (n: IMessage, o: IRoom) => void;
+    logout: (p: IUser) => void;
+    newgroup: (q: string, r: string, s: string) => void;
+    newchat: (t: IUser, u: IUser) => void;
+    adduser: (v: IUser, w: IRoom) => void;
+    joinroom: (x: string) => void;
+    getRoomMessages: (y: IRoom) => void
 }
 
 interface SocketData {
@@ -68,17 +69,33 @@ const port = process.env.PORT || 4000;
 // emit -> enviando algum dado
 
 let users = [] as Array<IUser>;
-const noUser = {id:'', name:'', avatar: '', color:''};
+const noUser = {id:'', email: '', name:'', avatar: '', password: '', color:''};
 
 let rooms = [] as Array<IRoom>
 
 function isInArray (array: Array<IUser>, id: string) {
     for (let i = 0; i < array.length; i++) {
         if (array[i].id === id) {
-        return true;
+            return true;
         }
     }
     return false;
+}
+
+function searchUser (array: Array<IUser>, email: string, password: string) {
+    let message = 'Usuário não cadastrado'
+    for (let i = 0; i < array.length; i++) {
+        if (array[i].email === email) {
+            if (array[i].password === password) {
+                message = 'logged'
+                return message
+            } else {
+                message = 'Senha incorreta'
+                return message
+            }
+        }
+    }
+    return message
 }
 
 io.on('connection', (socket) => {
@@ -96,19 +113,27 @@ io.on('connection', (socket) => {
         io.emit("rooms", rooms)
     })
     
-    socket.on("join", (name, avatar, color) => {
-        const user = {id: socket.id, name: name, avatar: avatar, color: color};
+    socket.on("join", (name, email, avatar, password, color) => {
+        const user = {id: socket.id, name: name, email: email, avatar: avatar, password: password, color: color};
         users.push(user);
         io.emit("users", users)
         io.emit("rooms", rooms)
+        console.log(users)
+    })
+
+    socket.on("login", (email, password) => {
+        const message = searchUser(users, email, password);
+        io.emit("messagelogin", message)
+        io.emit("users", users)
+        io.emit("rooms", rooms) 
     })
 
     socket.on("message", (message, room) => {
         socket.in(room.roomname).emit("message", message, room.roomname)
     })
 
-    socket.on("newgroup", (roomname, avatar, id) => {
-        const user = users.filter((item) => item.id === id);
+    socket.on("newgroup", (roomname, avatar, email) => {
+        const user = users.filter((item) => item.email === email);
         const room = {name: roomname, avatar: avatar, users: user, messages: [], group: true, roomname: roomname}
         rooms.push(room);
         socket.join(roomname)
@@ -121,7 +146,7 @@ io.on('connection', (socket) => {
         const userschat = [user, otherUser]
         const roomName = user.id.concat(otherUser.id);
         const room = {name: user.name.concat(otherUser.name), avatar: user.avatar.concat(otherUser.avatar), users: userschat, messages: [], group: false, roomname: roomName}
-        rooms.push(room);
+        rooms.unshift(room);
         socket.join(roomName)
         io.in(roomName).emit("message", {user: noUser, message: 'Conversa iniciada', hour: ''}, roomName)
         io.emit("groupdata", room)
