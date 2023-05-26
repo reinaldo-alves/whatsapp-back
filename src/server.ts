@@ -83,22 +83,6 @@ function isInArray (array: Array<IUser>, email: string) {
     return false;
 }
 
-// function searchUser (array: Array<IUser>, email: string, password: string) {
-//     let message = 'Usuário não cadastrado'
-//     for (let i = 0; i < array.length; i++) {
-//         if (array[i].email === email) {
-//             if (array[i].password === password) {
-//                 message = 'logged'
-//                 return message
-//             } else {
-//                 message = 'Senha incorreta'
-//                 return message
-//             }
-//         }
-//     }
-//     return message
-// }
-
 io.on('connection', (socket) => {
     socket.on('exitgroup', (user, group) => {
         const groupMembers = group.users.filter((item) => item.email !== user.email);
