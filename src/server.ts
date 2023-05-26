@@ -1,6 +1,7 @@
 import express from "express";
 import http from "http";
-import { Server } from "socket.io"
+import { Server } from "socket.io";
+import { hash, compare } from "bcrypt";
 
 interface IUser {
     id: string;
@@ -42,7 +43,7 @@ interface ClientToServerEvents {
     join: (g: string, h: string, i: string, j: string, k: string) => void;
     login: (l: string, m: string) => void;
     message: (n: IMessage, o: IRoom) => void;
-    logout: (p: IUser) => void;
+    exitgroup: (p: IUser, q: IRoom) => void;
     newgroup: (q: string, r: string, s: string) => void;
     newchat: (t: IUser, u: IUser) => void;
     adduser: (v: IUser, w: IRoom) => void;
@@ -73,59 +74,75 @@ const noUser = {id:'', email: '', name:'', avatar: '', password: '', color:''};
 
 let rooms = [] as Array<IRoom>
 
-function isInArray (array: Array<IUser>, id: string) {
+function isInArray (array: Array<IUser>, email: string) {
     for (let i = 0; i < array.length; i++) {
-        if (array[i].id === id) {
+        if (array[i].email === email) {
             return true;
         }
     }
     return false;
 }
 
-function searchUser (array: Array<IUser>, email: string, password: string) {
-    let message = 'Usuário não cadastrado'
-    for (let i = 0; i < array.length; i++) {
-        if (array[i].email === email) {
-            if (array[i].password === password) {
-                message = 'logged'
-                return message
-            } else {
-                message = 'Senha incorreta'
-                return message
-            }
-        }
-    }
-    return message
-}
+// function searchUser (array: Array<IUser>, email: string, password: string) {
+//     let message = 'Usuário não cadastrado'
+//     for (let i = 0; i < array.length; i++) {
+//         if (array[i].email === email) {
+//             if (array[i].password === password) {
+//                 message = 'logged'
+//                 return message
+//             } else {
+//                 message = 'Senha incorreta'
+//                 return message
+//             }
+//         }
+//     }
+//     return message
+// }
 
 io.on('connection', (socket) => {
-    socket.on('logout', (user) => {
-        users = users.filter((item) => item.id !== user.id);
-        const userRooms = rooms.filter((item) => isInArray(item.users, user.id) === true)
-        userRooms.map((item) => {
-            io.in(item.roomname).emit("message", {user: noUser, message: `${user.name} saiu do chat`, hour: ''}, item.roomname)
-            socket.leave(item.roomname)
-        })
-        rooms.map((item) => {
-            item.users = item.users.filter((el) => el.id !== user.id);
-        })
+    socket.on('exitgroup', (user, group) => {
+        const groupMembers = group.users.filter((item) => item.email !== user.email);
+        const index = rooms.findIndex((item) => item.roomname === group.roomname);
+        rooms[index].users = groupMembers;
+        io.in(group.roomname).emit("message", {user: noUser, message: `${user.name} saiu do grupo`, hour: ''}, group.roomname)
+        socket.leave(group.roomname)
         io.emit("users", users)
         io.emit("rooms", rooms)
     })
     
     socket.on("join", (name, email, avatar, password, color) => {
-        const user = {id: socket.id, name: name, email: email, avatar: avatar, password: password, color: color};
-        users.push(user);
-        io.emit("users", users)
-        io.emit("rooms", rooms)
-        console.log(users)
+        hash(password, 10, (err, hash) => {
+            const user = {id: socket.id, name: name, email: email, avatar: avatar, password: hash, color: color};
+            users.push(user);
+            io.emit("users", users)
+            io.emit("rooms", rooms)
+        })
     })
 
     socket.on("login", (email, password) => {
-        const message = searchUser(users, email, password);
-        io.emit("messagelogin", message)
-        io.emit("users", users)
-        io.emit("rooms", rooms) 
+        const [selectedUser] = users.filter((item) => item.email === email);
+        let message = ''
+        if (!isInArray(users, email)) {
+            message = 'Usuário não cadastrado'
+        } else {
+            compare(password, selectedUser.password, (err, result) => {
+                if (err) {
+                    message = 'Erro no sistema. Tente novamente mais tarde ou contate o administrador'
+                    io.emit("messagelogin", message)
+                }
+                if (result) {
+                    message = 'logged'
+                    io.emit("messagelogin", message)
+                    io.emit("users", users)
+                    io.emit("rooms", rooms) 
+                } else {
+                    message = 'Senha incorreta'
+                    io.emit("messagelogin", message)
+                }
+        })}
+            io.emit("messagelogin", message)
+            io.emit("users", users)
+            io.emit("rooms", rooms) 
     })
 
     socket.on("message", (message, room) => {
