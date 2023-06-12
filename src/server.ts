@@ -155,7 +155,7 @@ io.on('connection', (socket) => {
             io.emit("rooms", rooms) 
     })
 
-    socket.on("disconnecting", () => {
+    socket.on("disconnect", () => {
         const [selectedUser] = users.filter((item) => item.id === socket.id);
         if (selectedUser) {
             io.emit("users", users)
