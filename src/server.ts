@@ -35,13 +35,15 @@ interface ServerToClientEvents {
     message: (b: IMessage, c: string) => void;
     groupdata: (d: IRoom) => void;
     rooms: (e: Array<IRoom>) => void;
-    roomMessages: (f: Array<IMessage>) => void
-    messagelogin: (g: string) => void
+    roomMessages: (f: Array<IMessage>) => void;
+    messagelogin: (g: string) => void;
+    messageAlert: (h: IUser, i: boolean) => void;
 }
 
 interface ClientToServerEvents {
     join: (g: string, h: string, i: string, j: string, k: string) => void;
     login: (l: string, m: string) => void;
+    logout: (n: IUser) => void;
     message: (n: IMessage, o: IRoom) => void;
     exitgroup: (p: IUser, q: IRoom) => void;
     newgroup: (q: string, r: string, s: string) => void;
@@ -69,7 +71,25 @@ const port = process.env.PORT || 4000;
 // on -> escutando - receptor
 // emit -> enviando algum dado
 
-let users = [] as Array<IUser>;
+let users = 
+  [
+    {
+      id: 'BQvyd259qjnbDRBWAAAh',
+      name: 'ana',
+      email: 'ana',
+      avatar: 'https://img.freepik.com/vetores-premium/icone-de-perfil-de-avatar_188544-4755.jpg?w=2000',
+      password: '$2b$10$Ue82Q60bLduHarCBQyHNK.afkLHvzeB75VjFCah4gdKXQQT/ErGJ6',     
+      color: 'orange'
+    },
+    {
+      id: 'RQE4MX6G-EpwE3VZAAAj',
+      name: 'bia',
+      email: 'bia',
+      avatar: 'https://img.freepik.com/vetores-premium/icone-de-perfil-de-avatar_188544-4755.jpg?w=2000',
+      password: '$2b$10$7jKL9BX2hgDtxe6yFVX.hOnViJIEhZc30.b5PYwPE87nxG2eahFA6',     
+      color: 'red'
+    }
+  ] as Array<IUser>;
 const noUser = {id:'', email: '', name:'', avatar: '', password: '', color:''};
 
 let rooms = [] as Array<IRoom>
@@ -83,7 +103,7 @@ function isInArray (array: Array<IUser>, email: string) {
     return false;
 }
 
-io.on('connection', (socket) => {
+io.on('connection', (socket) => { 
     socket.on('exitgroup', (user, group) => {
         const groupMembers = group.users.filter((item) => item.email !== user.email);
         const index = rooms.findIndex((item) => item.roomname === group.roomname);
@@ -116,9 +136,15 @@ io.on('connection', (socket) => {
                 }
                 if (result) {
                     message = 'logged'
+                    users.forEach((item: IUser) => {
+                        if(item.email === email) {
+                            item.id = socket.id
+                        }
+                    })
                     io.emit("messagelogin", message)
                     io.emit("users", users)
-                    io.emit("rooms", rooms) 
+                    io.emit("rooms", rooms)
+                    socket.broadcast.emit("messageAlert", selectedUser, true)
                 } else {
                     message = 'Senha incorreta'
                     io.emit("messagelogin", message)
@@ -127,6 +153,14 @@ io.on('connection', (socket) => {
             io.emit("messagelogin", message)
             io.emit("users", users)
             io.emit("rooms", rooms) 
+    })
+
+    socket.on("disconnecting", () => {
+        const [selectedUser] = users.filter((item) => item.id === socket.id);
+        if (selectedUser) {
+            io.emit("users", users)
+            socket.broadcast.emit("messageAlert", selectedUser, false)
+        }
     })
 
     socket.on("message", (message, room) => {
@@ -149,7 +183,7 @@ io.on('connection', (socket) => {
         const room = {name: user.name.concat(otherUser.name), avatar: user.avatar.concat(otherUser.avatar), users: userschat, messages: [], group: false, roomname: roomName}
         rooms.unshift(room);
         socket.join(roomName)
-        io.in(roomName).emit("message", {user: noUser, message: 'Conversa iniciada', hour: ''}, roomName)
+        socket.in(roomName).emit("message", {user: noUser, message: 'Conversa iniciada', hour: ''}, roomName)
         io.emit("groupdata", room)
         io.emit("rooms", rooms)
     })
