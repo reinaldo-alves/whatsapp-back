@@ -9,7 +9,8 @@ interface IUser {
     name: string;
     avatar: string;
     password: string;
-    color: string
+    color: string;
+    online: boolean;
 }
 
 interface IMessage {
@@ -38,6 +39,7 @@ interface ServerToClientEvents {
     roomMessages: (f: Array<IMessage>) => void;
     messagelogin: (g: string) => void;
     messageAlert: (h: IUser, i: boolean) => void;
+    generalMessage: (j: string) => void;
 }
 
 interface ClientToServerEvents {
@@ -77,7 +79,7 @@ let users =
       id: 'BQvyd259qjnbDRBWAAAh',
       name: 'ana',
       email: 'ana',
-      avatar: 'https://img.freepik.com/vetores-premium/icone-de-perfil-de-avatar_188544-4755.jpg?w=2000',
+      avatar: 'https://aloalobahia.com/images/p/anacastelayoutube_alo_alo_bahia.jpg',
       password: '$2b$10$Ue82Q60bLduHarCBQyHNK.afkLHvzeB75VjFCah4gdKXQQT/ErGJ6',     
       color: 'orange'
     },
@@ -85,12 +87,12 @@ let users =
       id: 'RQE4MX6G-EpwE3VZAAAj',
       name: 'bia',
       email: 'bia',
-      avatar: 'https://img.freepik.com/vetores-premium/icone-de-perfil-de-avatar_188544-4755.jpg?w=2000',
+      avatar: 'https://uploads.metropoles.com/wp-content/uploads/2022/09/22161731/308236271_488805909523203_3060112260980892395_n.jpg',
       password: '$2b$10$7jKL9BX2hgDtxe6yFVX.hOnViJIEhZc30.b5PYwPE87nxG2eahFA6',     
       color: 'red'
     }
   ] as Array<IUser>;
-const noUser = {id:'', email: '', name:'', avatar: '', password: '', color:''};
+const noUser = {id:'', email: '', name:'', avatar: '', password: '', color:'', online: true};
 
 let rooms = [] as Array<IRoom>
 
@@ -107,16 +109,22 @@ io.on('connection', (socket) => {
     socket.on('exitgroup', (user, group) => {
         const groupMembers = group.users.filter((item) => item.email !== user.email);
         const index = rooms.findIndex((item) => item.roomname === group.roomname);
-        rooms[index].users = groupMembers;
-        io.in(group.roomname).emit("message", {user: noUser, message: `${user.name} saiu do grupo`, hour: ''}, group.roomname)
-        socket.leave(group.roomname)
-        io.emit("users", users)
-        io.emit("rooms", rooms)
+        console.log(groupMembers)
+        if (groupMembers.length !== 0) {
+            rooms[index].users = groupMembers;
+            io.in(group.roomname).emit("message", {user: noUser, message: `${user.name} saiu do grupo`, hour: ''}, group.roomname)
+            socket.leave(group.roomname)
+            io.emit("users", users)
+            io.emit("rooms", rooms)
+            io.to(socket.id).emit("generalMessage", 'success')
+        } else {
+            io.to(socket.id).emit("generalMessage", 'Não foi possível executar esta ação')
+        }
     })
     
     socket.on("join", (name, email, avatar, password, color) => {
         hash(password, 10, (err, hash) => {
-            const user = {id: socket.id, name: name, email: email, avatar: avatar, password: hash, color: color};
+            const user = {id: socket.id, name: name, email: email, avatar: avatar, password: hash, color: color, online: true};
             users.push(user);
             io.emit("users", users)
             io.emit("rooms", rooms)
@@ -138,7 +146,18 @@ io.on('connection', (socket) => {
                     message = 'logged'
                     users.forEach((item: IUser) => {
                         if(item.email === email) {
-                            item.id = socket.id
+                            item.id = socket.id;
+                            item.online = true;
+                        }
+                    })
+                    rooms.forEach((item) => {
+                        if (isInArray(item.users, selectedUser.email)) {
+                            item.users.forEach((el) => {
+                                if (el.email === selectedUser.email) {
+                                    el.id = socket.id;
+                                    el.online = true;
+                                }
+                            })
                         }
                     })
                     io.emit("messagelogin", message)
@@ -158,7 +177,22 @@ io.on('connection', (socket) => {
     socket.on("disconnect", () => {
         const [selectedUser] = users.filter((item) => item.id === socket.id);
         if (selectedUser) {
+            users.forEach((item) => {
+                if (item.email === selectedUser.email) {
+                    item.online = false;
+                }
+            })
+            rooms.forEach((item) => {
+                if (isInArray(item.users, selectedUser.email)) {
+                    item.users.forEach((el) => {
+                        if (el.email === selectedUser.email) {
+                            el.online = false;
+                        }
+                    })
+                }
+            })
             io.emit("users", users)
+            io.emit("rooms", rooms)
             socket.broadcast.emit("messageAlert", selectedUser, false)
         }
     })
@@ -169,8 +203,8 @@ io.on('connection', (socket) => {
 
     socket.on("newgroup", (roomname, avatar, email) => {
         const user = users.filter((item) => item.email === email);
-        const room = {name: roomname, avatar: avatar, users: user, messages: [], group: true, roomname: roomname}
-        rooms.push(room);
+        const room = {name: roomname, avatar: avatar, users: user, group: true, roomname: roomname}
+        rooms.unshift(room);
         socket.join(roomname)
         io.in(roomname).emit("message", {user: noUser, message: `Grupo ${roomname} criado`, hour: ''}, roomname)
         io.emit("groupdata", room)
@@ -179,8 +213,8 @@ io.on('connection', (socket) => {
 
     socket.on("newchat", (otherUser, user) => {
         const userschat = [user, otherUser]
-        const roomName = user.id.concat(otherUser.id);
-        const room = {name: user.name.concat(otherUser.name), avatar: user.avatar.concat(otherUser.avatar), users: userschat, messages: [], group: false, roomname: roomName}
+        const roomName = user.email.concat(otherUser.email);
+        const room = {name: user.name.concat(otherUser.name), avatar: user.avatar.concat(otherUser.avatar), users: userschat, group: false, roomname: roomName}
         rooms.unshift(room);
         socket.join(roomName)
         socket.in(roomName).emit("message", {user: noUser, message: 'Conversa iniciada', hour: ''}, roomName)
@@ -195,6 +229,7 @@ io.on('connection', (socket) => {
         rooms[index] = selectedRoom
         io.in(selectedRoom.roomname).emit("message", {user: noUser, message: `${user.name} entrou no grupo`, hour: ''}, selectedRoom.roomname)
         io.emit("groupdata", selectedRoom)
+        io.emit("users", users)
         io.emit("rooms", rooms)
     })
 
