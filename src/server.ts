@@ -73,25 +73,7 @@ const port = process.env.PORT || 4000;
 // on -> escutando - receptor
 // emit -> enviando algum dado
 
-let users = 
-  [
-    {
-      id: 'BQvyd259qjnbDRBWAAAh',
-      name: 'ana',
-      email: 'ana',
-      avatar: 'https://aloalobahia.com/images/p/anacastelayoutube_alo_alo_bahia.jpg',
-      password: '$2b$10$Ue82Q60bLduHarCBQyHNK.afkLHvzeB75VjFCah4gdKXQQT/ErGJ6',     
-      color: 'orange'
-    },
-    {
-      id: 'RQE4MX6G-EpwE3VZAAAj',
-      name: 'bia',
-      email: 'bia',
-      avatar: 'https://uploads.metropoles.com/wp-content/uploads/2022/09/22161731/308236271_488805909523203_3060112260980892395_n.jpg',
-      password: '$2b$10$7jKL9BX2hgDtxe6yFVX.hOnViJIEhZc30.b5PYwPE87nxG2eahFA6',     
-      color: 'red'
-    }
-  ] as Array<IUser>;
+let users = [] as Array<IUser>;
 const noUser = {id:'', email: '', name:'', avatar: '', password: '', color:'', online: true};
 
 let rooms = [] as Array<IRoom>

@@ -1,0 +1,61 @@
+// Usuários exemplo para colocar no servidor
+
+let users = 
+  [
+    {
+      id: 'BQvyd259qjnbDRBWAAAi',
+      name: 'ney',
+      email: 'ney@gmail.com',
+      avatar: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Bra-Cos_%281%29_%28cropped%29.jpg/640px-Bra-Cos_%281%29_%28cropped%29.jpg',
+      password: '$2b$10$Ue82Q60bLduHarCBQyHNK.afkLHvzeB75VjFCah4gdKXQQT/ErGJ6',     
+      color: 'yellow'
+    },
+    {
+        id: 'BQvyd259qjnbDRBWAAAj',
+        name: 'max',
+        email: 'max@gmail.com',
+        avatar: 'https://nationaltoday.com/wp-content/uploads/2022/05/117-Max-Schneider.jpg',
+        password: '$2b$10$Ue82Q60bLduHarCBQyHNK.afkLHvzeB75VjFCah4gdKXQQT/ErGJ6',     
+        color: 'red'
+    },
+    {
+        id: 'BQvyd259qjnbDRBWAAAk',
+        name: 'biu',
+        email: 'biu@gmail.com',
+        avatar: 'https://s2-g1.glbimg.com/0Zt5jqrfJV5tKCoRFKpdKwzFAzM=/133x897:3268x3072/1008x0/smart/filters:strip_icc()/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2020/c/Y/2MbPzrRA2TQPfXaAN1FQ/raw02649.jpg',
+        password: '$2b$10$Ue82Q60bLduHarCBQyHNK.afkLHvzeB75VjFCah4gdKXQQT/ErGJ6',     
+        color: 'gray'
+    },
+    {
+        id: 'BQvyd259qjnbDRBWAAAl',
+        name: 'gil',
+        email: 'gil@gmail.com',
+        avatar: 'https://conteudo.imguol.com.br/c/entretenimento/bb/2020/09/19/gilberto-gil-ainda-mandou-recado-para-os-fas-se-unirem-a-luta-antirracista-1600567467878_v2_3x4.jpg',
+        password: '$2b$10$Ue82Q60bLduHarCBQyHNK.afkLHvzeB75VjFCah4gdKXQQT/ErGJ6',     
+        color: 'green'
+    },
+    {
+        id: 'BQvyd259qjnbDRBWAAAh',
+        name: 'ana',
+        email: 'ana@gmail.com',
+        avatar: 'https://aloalobahia.com/images/p/anacastelayoutube_alo_alo_bahia.jpg',
+        password: '$2b$10$Ue82Q60bLduHarCBQyHNK.afkLHvzeB75VjFCah4gdKXQQT/ErGJ6',     
+        color: 'orange'
+    },
+    {
+        id: 'BQvyd259qjnbDRBWAAAn',
+        name: 'lee',
+        email: 'lee@gmail.com',
+        avatar: 'https://s2-gshow.glbimg.com/DPbNZUeNyt1SetsTkUqM9x1IMHQ=/0x0:1023x768/984x0/smart/filters:strip_icc()/i.s3.glbimg.com/v1/AUTH_e84042ef78cb4708aeebdf1c68c6cbd6/internal_photos/bs/2023/X/M/P8aVVZS1Aoy2RGGUONlg/rita-lee-divulgacao.png',
+        password: '$2b$10$Ue82Q60bLduHarCBQyHNK.afkLHvzeB75VjFCah4gdKXQQT/ErGJ6',     
+        color: 'pink'
+    },
+    {
+      id: 'RQE4MX6G-EpwE3VZAAAj',
+      name: 'bia',
+      email: 'bia@gmail.com',
+      avatar: 'https://uploads.metropoles.com/wp-content/uploads/2022/09/22161731/308236271_488805909523203_3060112260980892395_n.jpg',
+      password: '$2b$10$7jKL9BX2hgDtxe6yFVX.hOnViJIEhZc30.b5PYwPE87nxG2eahFA6',     
+      color: 'blue'
+    }
+  ] as Array<IUser>;
