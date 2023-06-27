@@ -13,6 +13,8 @@ Para que o WhatsApp Web Clone possa funcionar na sua máquina, você precisa ter
 - Node.js: https://nodejs.org/
 - Git: https://git-scm.com/downloads/
 
+Você também precisa rodar o sistema em um navegador sem CORS. Pesquise como fazer isto para seu sistema operacional e seu navegador. Caso esteja usando o Google Chrome no Windows, basta criar um atalho no desktop com o seguinte caminho `"C:\Program Files\Google\Chrome\Application\chrome.exe" --disable-web-security --disable-gpu --user-data-dir=%LOCALAPPDATA%\Google\chromeTemp`. 
+
 ### Instalando o sistema
 
 Acesse o terminal do seu sistema operacional e navegue até o diretório onde deseja instalar o sistema. Em seguida, digite os seguintes comandos para clonar os repositórios do front-end e do back-end.
@@ -28,7 +30,7 @@ No terminal, navegue até a pasta do back-end e execute o seguinte comando `npm 
 
 Em seguida, abra outra aba ou janela do terminal, navegue até a pasta do front-end e execute o comando `npm start` para executar o projeto.
 
-Por fim, acesse o endereço http://localhost:3000 no seu navegador para começar a usar o WhatsApp Web Clone.
+Por fim, clique no atalho criado para rodar o navegador sem CORS e acesse endereço http://localhost:3000 para começar a usar o WhatsApp Web Clone.
 
 OBS: certifique-se de que as portas 3000 e 4000 estejam livres em sua máquina.
 
