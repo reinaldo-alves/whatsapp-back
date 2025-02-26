@@ -27,10 +27,6 @@ interface IRoom {
     roomname: string
 }
 
-interface IAllMessages {
-    [roomName: string]: Array<IMessage>
-}
-
 interface ServerToClientEvents {
     users: (a: Array<IUser>) => void;
     message: (b: IMessage, c: string) => void;
@@ -40,6 +36,7 @@ interface ServerToClientEvents {
     messagelogin: (g: string) => void;
     messageAlert: (h: IUser, i: boolean) => void;
     generalMessage: (j: string) => void;
+    video: (k: any) => void;
 }
 
 interface ClientToServerEvents {
@@ -52,7 +49,9 @@ interface ClientToServerEvents {
     newchat: (t: IUser, u: IUser) => void;
     adduser: (v: IUser, w: IRoom) => void;
     joinroom: (x: string) => void;
-    getRoomMessages: (y: IRoom) => void
+    getRoomMessages: (y: IRoom) => void;
+    video: (z: any) => void;
+    videomessage: (a: IRoom, b: IUser, c: boolean) => void;
 }
 
 interface SocketData {
@@ -66,7 +65,12 @@ const io = new Server<
     ClientToServerEvents,
     ServerToClientEvents,
     SocketData
->(server);
+>(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
 
 const port = process.env.PORT || 4000;
 
@@ -76,7 +80,9 @@ const port = process.env.PORT || 4000;
 let users = [] as Array<IUser>;
 const noUser = {id:'', email: '', name:'', avatar: '', password: '', color:'', online: true};
 
-let rooms = [] as Array<IRoom>
+let rooms = [] as Array<IRoom>;
+
+let counterVideoChat = 0;
 
 function isInArray (array: Array<IUser>, email: string) {
     for (let i = 0; i < array.length; i++) {
@@ -217,6 +223,19 @@ io.on('connection', (socket) => {
 
     socket.on("joinroom", (roomname) => {
         socket.join(roomname);
+    })
+
+    socket.on('video', (message) => {
+        socket.broadcast.emit('video', message);
+    })
+
+    socket.on('videomessage', (room, user, enter) => {
+        enter ? counterVideoChat++ : counterVideoChat --
+        if(counterVideoChat < 0) counterVideoChat = 0;
+        const message = `${user.name} ${enter ? 'iniciou' : 'encerrou'} uma chamada de vídeo`;
+        if (counterVideoChat === 1) {
+            io.in(room.roomname).emit("message", {user: noUser, message: message, hour: ''}, room.roomname);
+        }
     })
 })
 

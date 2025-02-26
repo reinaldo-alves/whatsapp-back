@@ -2,7 +2,7 @@
 
 ## Sobre o projeto
 
-WhatsApp Web Clone é um chat em tempo real inspirado no WhatsApp. Este sistema permite que os usuários criem contas com nome, email, senha e foto de perfil e façam login por meio desta conta. Uva vez logado, o usuário pode iniciar conversas com qualquer um que também esteja online, também pode criar chats em grupos e adicionar outros usuários nesses grupos. Para construir a interface do WhatsApp Web Clone, foi utilizado o framework **React** com **TypeScript** e **Styled Components**, enquanto que para o back-end foi utilizado **Node.js** com requisições através do **Socket.IO**, tecnologia baseada em web sockets que permite troca de informações em tempo real entre o servidor e os diversos clients conectados.
+WhatsApp Web Clone é um chat em tempo real inspirado no WhatsApp. Este sistema permite que os usuários criem contas com nome, email, senha e foto de perfil e façam login por meio desta conta. Uma vez logado, o usuário pode iniciar conversas ou chamadas de vídeo com qualquer um que também esteja online, além de poder criar chats em grupos e adicionar outros usuários nesses grupos. Para construir a interface do WhatsApp Web Clone, foi utilizado o framework **React** com **TypeScript** e **Styled Components**, enquanto que para o back-end foi utilizado **Node.js** com requisições através do **Socket.IO**, tecnologia baseada em web sockets que permite troca de informações em tempo real entre o servidor e os diversos clients conectados. Já a manipulação dos dados de áudio e vídeo foi feita através da tecnologia **WebRTC**.
 
 ## Como utilizar o sistema?
 
@@ -12,8 +12,6 @@ Para que o WhatsApp Web Clone possa funcionar na sua máquina, você precisa ter
 
 - Node.js: https://nodejs.org/
 - Git: https://git-scm.com/downloads/
-
-Você também precisa rodar o sistema em um navegador sem CORS. Pesquise como fazer isto para seu sistema operacional e seu navegador. Caso esteja usando o Google Chrome no Windows, basta criar um atalho no desktop com o seguinte caminho `"C:\Program Files\Google\Chrome\Application\chrome.exe" --disable-web-security --disable-gpu --user-data-dir=%LOCALAPPDATA%\Google\chromeTemp`. 
 
 ### Instalando o sistema
 
